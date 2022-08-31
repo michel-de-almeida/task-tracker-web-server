@@ -19,6 +19,3 @@ api.use(errorHandler)
 api.listen(port, () => {
     console.log(`listening on port ${port}`)
 })
-
-const connectionString =
-    'mongodb+srv://user2:user2@cluster0.utckaup.mongodb.net/?retryWrites=true&w=majority'
