@@ -3,8 +3,10 @@ import dotenv from 'dotenv'
 import router from './Routes/taskRoutes'
 import cors from 'cors'
 import errorHandler from './Middleware/errorMiddleware'
+import { connectDB } from './Config/db'
 
 dotenv.config()
+connectDB()
 const port = process.env.port || 5000
 const api = express()
 

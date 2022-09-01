@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import expressAsyncHandler from 'express-async-handler'
+import taskCollection from '../Models/taskModel'
 
 class TaskController {
     // @desc Get Task List
@@ -7,7 +8,13 @@ class TaskController {
     // @access Private
     static getTaskList = expressAsyncHandler(
         async (req: Request, res: Response) => {
-            res.status(200).json({ message: 'Get Tasks list' })
+            try {
+                const taskList = await taskCollection.find()
+                res.status(200).json(taskList)
+            } catch (error) {
+                res.status(400)
+                throw new Error(`Error fetching task list: ${error}`)
+            }
         }
     )
 
@@ -16,7 +23,18 @@ class TaskController {
     // @access Private
     static getTask = expressAsyncHandler(
         async (req: Request, res: Response) => {
-            res.status(200).json({ message: `Get Task ${req.params.id}` })
+            const id = req.params.id
+
+            try {
+                const task = await taskCollection.findById(id)
+                res.status(200).json(task)
+            } catch (error: any) {
+                res.status(400)
+                if (error.kind === 'ObjectId') {
+                    throw new Error(`Task with id:${id} not found`)
+                }
+                throw new Error(`Error fetching task: ${error}`)
+            }
         }
     )
 
@@ -25,9 +43,19 @@ class TaskController {
     // @access Private
     static setTask = expressAsyncHandler(
         async (req: Request, res: Response) => {
-            //console.log(req.body)
-            res.status(400)
-            throw new Error('Please provide a Task object')
+            const data = req.body
+
+            try {
+                const newTask = await taskCollection.create({
+                    text: data.text,
+                    day: data.day,
+                    reminder: data.reminder,
+                })
+                res.status(200).json(newTask)
+            } catch (error) {
+                res.status(400)
+                throw new Error(`Error creating task: ${error}`)
+            }
         }
     )
 
@@ -36,7 +64,25 @@ class TaskController {
     // @access Private
     static updateTask = expressAsyncHandler(
         async (req: Request, res: Response) => {
-            res.status(200).json({ message: `Update task ${req.params.id}` })
+            const id = req.params.id
+            const data = req.body
+
+            try {
+                const updatedTask = await taskCollection.findByIdAndUpdate(
+                    id,
+                    data,
+                    {
+                        new: true,
+                    }
+                )
+                res.status(200).json(updatedTask)
+            } catch (error: any) {
+                res.status(400)
+                if (error.kind === 'ObjectId') {
+                    throw new Error(`Task with id:${id} not found`)
+                }
+                throw new Error(`Error updating task: ${error}`)
+            }
         }
     )
 
@@ -45,7 +91,19 @@ class TaskController {
     // @access Private
     static deleteTask = expressAsyncHandler(
         async (req: Request, res: Response) => {
-            res.status(200).json({ message: `Delete task ${req.params.id}` })
+            const id = req.params.id
+
+            try {
+                const task = await taskCollection.findById(id)
+                task?.remove()
+                res.status(200).json({ message: 'Delete success', id: id })
+            } catch (error: any) {
+                res.status(400)
+                if (error.kind === 'ObjectId') {
+                    throw new Error(`Task with id:${id} not found`)
+                }
+                throw new Error(`Error deleting task: ${error}`)
+            }
         }
     )
 }
